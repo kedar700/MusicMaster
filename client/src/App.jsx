@@ -2,6 +2,8 @@ import React, {Component} from 'react';
 import './App.css';
 import {FormControl, FormGroup, InputGroup, Glyphicon} from 'react-bootstrap';
 import SpotifyWebApi from 'spotify-web-api-js';
+import Profile from './Profile';
+import Gallery from './Gallery';
 
 const spotifyApi = new SpotifyWebApi();
 
@@ -16,7 +18,9 @@ class App extends Component {
         }
         this.state = {
             loggedIn: token ? true : false,
-            query: ''
+            query: '',
+            artist: null,
+            tracks: []
         }
     }
 
@@ -33,26 +37,16 @@ class App extends Component {
     }
 
     search() {
-        console.log('state', this.state);
-        spotifyApi.searchArtists(this.state.query).then((res) =>{
+        spotifyApi.searchArtists(this.state.query).then((res) => {
             console.log(res);
+            const artist = res.artists.items[0];
+            this.setState({artist});
+            spotifyApi.getArtistTopTracks(this.state.artist.id, 'US').then((response) => {
+                console.log('top tracks', response);
+                const {tracks} = response;
+                this.setState({tracks});
+            })
         });
-        // const baseURL = 'https://api.spotify.com/v1/search?';
-        // const fetchURL = `${baseURL}q=${this.state.query}&type=artist&limit=1`;
-        // let accessToken = params.access_token;
-        // console.log(accessToken);
-        // let spOptions = {
-        //     method: 'GET',
-        //     headers: {
-        //         'Authorization': 'Bearer ' + accessToken
-        //     },
-        //     mode: 'cors',
-        //     cache: 'default'
-        // };
-        // console.log(fetchURL);
-        // fetch(fetchURL, spOptions )
-        //     .then(response => response.json())
-        //     .then(json => console.log(json))
     }
 
     render() {
@@ -81,13 +75,15 @@ class App extends Component {
                             </InputGroup.Addon>
                         </InputGroup>
                     </FormGroup>
-                    <div className="Profile">
-                        <div>Artist Photo</div>
-                        <div>Artist Name</div>
-                    </div>
-                    <div className="Gallery">
-                        Gallery
-                    </div>
+                    {
+                        this.state.artist !== null ?
+                            <div>
+                                <Profile artist={this.state.artist}/>
+                                <Gallery tracks={this.state.tracks} />
+                            </div> : <div></div>
+
+                    }
+
                 </div>
                 }
             </div>
